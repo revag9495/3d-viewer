@@ -1,62 +1,36 @@
-<?php
+protected function render() {
+        $settings = $this->get_settings_for_display();
+        $model_url = esc_url( $settings['model_url'] );
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
-}
+        // Verifica che l'URL del modello GLB sia impostato
+        if ( ! empty( $model_url ) ) : ?>
 
-// Aggiunge la scheda "3D Viewer" nella pagina del prodotto WooCommerce
-function webluxe_3d_viewer_add_product_tab( $tabs ) {
-    $tabs['webluxe_3d_viewer'] = array(
-        'label'    => __( '3D Viewer', 'webluxe-3d-viewer' ),
-        'target'   => 'webluxe_3d_viewer_options',
-        'class'    => array( 'show_if_simple', 'show_if_variable' ),
-        'priority' => 50,
-    );
-    return $tabs;
-}
-add_filter( 'woocommerce_product_data_tabs', 'webluxe_3d_viewer_add_product_tab' );
+            <div id="root"></div>
 
-// Contenuto della scheda "3D Viewer" con selezione dell'icona, altezza e visibilità su dispositivi
-function webluxe_3d_viewer_product_tab_content() {
-    global $post;
+            <script type="module">
+                // Verifica se il document è pronto
+                document.addEventListener("DOMContentLoaded", function() {
+                    // Configurazione del progetto e opzioni del visualizzatore
+                    const project = {
+                        modelUrl: "<?php echo $model_url; ?>", // URL del modello GLB
+                    };
 
-    $icon_id = get_post_meta( $post->ID, '_webluxe_3d_viewer_icon_id', true );
-    $model_url = get_post_meta( $post->ID, '_webluxe_3d_model_url', true );
-    $thumbnail_id = get_post_meta( $post->ID, '_webluxe_3d_viewer_thumbnail_id', true ); // Thumbnail per la galleria
-    $height_desktop = get_post_meta( $post->ID, '_webluxe_3d_viewer_height_desktop', true );
-    $height_tablet = get_post_meta( $post->ID, '_webluxe_3d_viewer_height_tablet', true );
-    $height_mobile = get_post_meta( $post->ID, '_webluxe_3d_viewer_height_mobile', true );
-    $show_icon_desktop = get_post_meta( $post->ID, '_webluxe_3d_viewer_show_icon_desktop', true );
-    $show_icon_tablet = get_post_meta( $post->ID, '_webluxe_3d_viewer_show_icon_tablet', true );
-    $show_icon_mobile = get_post_meta( $post->ID, '_webluxe_3d_viewer_show_icon_mobile', true );
+                    const viewerOptions = {
+                        showLogo: true,
+                        showCard: true,
+                        // Altre opzioni del visualizzatore
+                    };
 
-    echo '<div id="webluxe_3d_viewer_options" class="panel woocommerce_options_panel">';
-    echo '<div class="options_group">';
+                    // Inizializzazione del visualizzatore WebLuxe
+                    if (typeof WebLuxeViewer !== 'undefined') {
+                        new WebLuxeViewer.Viewer(document.getElementById("root"), project, viewerOptions);
+                    } else {
+                        console.error("WebLuxeViewer non è definito. Assicurati che la libreria sia caricata correttamente.");
+                    }
+                });
+            </script>
 
-    // Campo per l'URL del modello GLB
-    woocommerce_wp_text_input( array(
-        'id'          => 'webluxe_3d_model_url',
-        'label'       => __( 'Model GLB URL', 'webluxe-3d-viewer' ),
-        'description' => __( 'URL del file GLB per il visualizzatore 3D', 'webluxe-3d-viewer' ),
-        'value'       => $model_url,
-        'desc_tip'    => true,
-    ));
-
-    // Pulsante per selezionare l'icona del visualizzatore 3D
-    ?>
-    <p class="form-field">
-        <label><?php esc_html_e( '3D Viewer Thumbnail Icon', 'webluxe-3d-viewer' ); ?></label>
-        <button type="button" class="button" id="webluxe_3d_viewer_icon_button"><?php esc_html_e( 'Scegli Icona', 'webluxe-3d-viewer' ); ?></button>
-        <button type="button" class="button" id="webluxe_3d_viewer_icon_remove"><?php esc_html_e( 'Rimuovi Icona', 'webluxe-3d-viewer' ); ?></button>
-        <img id="webluxe_3d_viewer_icon_preview" src="<?php echo esc_url( wp_get_attachment_url( $icon_id ) ); ?>" style="max-width: 50px; display: <?php echo empty( $icon_id ) ? 'none' : 'block'; ?>;" />
-        <input type="hidden" id="webluxe_3d_viewer_icon_id" name="webluxe_3d_viewer_icon_id" value="<?php echo esc_attr( $icon_id ); ?>">
-    </p>
-
-    <!-- Selezione della thumbnail specifica per il visualizzatore -->
-    <p class="form-field">
-        <label><?php esc_html_e( 'Thumbnail per Visualizzatore 3D', 'webluxe-3d-viewer' ); ?></label>
-        <button type="button" class="button" id="webluxe_3d_viewer_thumbnail_button"><?php esc_html_e( 'Scegli Immagine', 'webluxe-3d-viewer' ); ?></button>
-        <button type="button" class="button" id="webluxe_3d_viewer_thumbnail_remove"><?php esc_html_e( 'Rimuovi Immagine', 'webluxe-3d-viewer' ); ?></button>
-        <img id="webluxe_3d_viewer_thumbnail_preview" src="<?php echo esc_url( wp_get_attachment_url( $thumbnail_id ) ); ?>" style="max-width: 50px; display: <?php echo empty( $thumbnail_id ) ? 'none' : 'block'; ?>;" />
-        <input type="hidden" id="webluxe_3d_viewer_thumbnail_id" name="webluxe_3d_viewer_thumbnail_id" value="<?php echo esc_attr( $thumbnail_id ); ?>">
-    </p>
+        <?php else : ?>
+            <p><?php _e( 'Inserisci un URL valido per il modello GLB.', 'webluxe-3d-viewer' ); ?></p>
+        <?php endif;
+    }
